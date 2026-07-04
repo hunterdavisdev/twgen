@@ -10,14 +10,18 @@ and your types can't drift.
 
 **Requires Tailwind CSS v4** — it generates v4 `@theme` / `@custom-variant` /
 `@source` syntax. The codegen core is framework-agnostic and has no runtime
-dependencies; the theme-switcher (`twts/runtime`) is optional and pulls in React
-+ Zustand only if you use it. Ships three entry points — `twts` (define +
-codegen), `twts/vite` (plugin), `twts/runtime` (store) — plus a `twts` CLI.
+dependencies; the theme-switcher (`@hunterdavisdev/twts/runtime`) is optional and
+pulls in React + Zustand only if you use it. Ships three entry points —
+`@hunterdavisdev/twts` (define + codegen), `@hunterdavisdev/twts/vite` (plugin),
+`@hunterdavisdev/twts/runtime` (store) — plus a `twts` CLI.
 
 ## Install
 
 ```sh
-bun add twts
+npm  install @hunterdavisdev/twts
+pnpm add     @hunterdavisdev/twts
+yarn add     @hunterdavisdev/twts
+bun  add     @hunterdavisdev/twts
 ```
 
 Peer deps (as needed): `vite` (plugin), `zustand` + `react` (runtime).
@@ -35,7 +39,7 @@ for the ones you actually vary.
 
 ```ts
 // src/design/base.tokens.ts — shared fragment
-import { defineTokens } from "twts"
+import { defineTokens } from "@hunterdavisdev/twts"
 
 export const base = defineTokens({
 	text: { md: { rem: "0.875rem", line: "1.375rem" } }, // + optional tracking / weight per size
@@ -46,7 +50,7 @@ export const base = defineTokens({
 
 ```ts
 // src/design/tokens.ts — the entry the plugin/CLI points at
-import { defineThemes } from "twts"
+import { defineThemes } from "@hunterdavisdev/twts"
 import { base } from "./base.tokens"
 
 export const themeConfig = defineThemes([
@@ -138,7 +142,7 @@ Tailwind default like `rounded-3xl` or `font-thin` would let people design off-s
 
 ```ts
 // vite.config.ts
-import { twts } from "twts/vite"
+import { twts } from "@hunterdavisdev/twts/vite"
 import tailwindcss from "@tailwindcss/vite"
 
 export default defineConfig({
@@ -166,7 +170,7 @@ twts gen --tokens src/design/tokens.ts --out src/design/theme.gen.css
 
 ```ts
 // src/stores/themeStore.ts
-import { createThemeStore } from "twts/runtime"
+import { createThemeStore } from "@hunterdavisdev/twts/runtime"
 import { themeConfig } from "@/design/tokens"
 
 export const useThemeStore = createThemeStore(themeConfig) // pass the whole config
@@ -200,7 +204,7 @@ yet, so add a tiny inline `<head>` script that sets it from the same
 A tiny conditional class joiner is exported for convenience:
 
 ```ts
-import { cn } from "twts"
+import { cn } from "@hunterdavisdev/twts"
 
 <div className={cn("rounded-md border border-border", selected && "border-accent bg-accent/10")} />
 ```

@@ -1,5 +1,5 @@
 {
-	"name": "twts",
+	"name": "@hunterdavisdev/twts",
 	"version": "0.1.0",
 	"description": "Type-safe design tokens → Tailwind v4 theme codegen + runtime theming",
 	"license": "MIT",
@@ -7,6 +7,9 @@
 	"type": "module",
 	"engines": {
 		"node": ">=18"
+	},
+	"publishConfig": {
+		"access": "public"
 	},
 	"repository": {
 		"type": "git",

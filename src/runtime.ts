@@ -4,7 +4,7 @@
  * class (variants) to <html>, persists to localStorage, and follows the OS on
  * first load. Pass it the whole `defineThemes(...)` result.
  *
- *   import { createThemeStore } from "twts/runtime"
+ *   import { createThemeStore } from "@hunterdavisdev/twts/runtime"
  *   export const useThemeStore = createThemeStore(themeConfig)
  */
 import { create } from "zustand"

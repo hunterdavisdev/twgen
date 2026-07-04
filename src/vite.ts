@@ -2,7 +2,7 @@
  * twts Vite plugin — regenerates the theme CSS from your tokens on build and
  * (in dev) whenever the tokens file changes, triggering HMR.
  *
- *   import { twts } from "twts/vite"
+ *   import { twts } from "@hunterdavisdev/twts/vite"
  *   plugins: [twts(), tailwindcss()]   // place before @tailwindcss/vite
  */
 import { resolve } from "node:path"

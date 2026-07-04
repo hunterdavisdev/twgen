@@ -76,14 +76,3 @@ additive (no resets).
 theme's selector (e.g. `.dark`) drives the palette, and a `scheme-<light|dark>` class drives
 the `is-light:` / `is-dark:` custom variants. It persists the choice to `localStorage`
 (`"theme"` key) and follows the OS `prefers-color-scheme` on first load.
-
-## Gotchas
-
-- **npm name is `twts`:** the more intuitive `tstw` was already taken on npm by an unrelated
-  package, so this ships as `twts`. Keep the package name, `bin`, imports, and docs all on
-  `twts` — don't "correct" it back to `tstw`.
-- `src/design/theme.gen.css` (the generated output) is meant to be gitignored in consuming
-  projects — it's regenerated from tokens and should never be hand-edited (it carries an
-  AUTO-GENERATED header).
-- Biome formatting is unusual: **tabs**, width 2, line width 120, no semicolons, double quotes,
-  ES5 trailing commas. Run `bun run check` rather than matching by hand.
