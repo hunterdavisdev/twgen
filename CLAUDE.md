@@ -4,10 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`twts` is a library that turns TypeScript-defined design tokens into a Tailwind v4
+`twgen` is a library that turns TypeScript-defined design tokens into a Tailwind v4
 `@theme` stylesheet plus a typed runtime theme-switcher. One token source drives
 both the generated CSS and the TypeScript types, so they can't drift. Distributed
-as a package with three importable entries (`.`, `./vite`, `./runtime`) and a CLI bin (`twts`).
+as a package with three importable entries (`.`, `./vite`, `./runtime`) and a CLI bin (`twgen`).
 
 ## Commands
 
@@ -34,7 +34,7 @@ The package has a strict **browser-safe core / node boundary** split. Respect it
   call (`moduleCache: false`) so watch-driven regen picks up edits.
 - **`src/vite.ts`** — Vite plugin (`./vite` entry). `enforce: "pre"`; regenerates on
   `buildStart` and on watched-file change. Must run before `@tailwindcss/vite`.
-- **`src/cli.ts`** — CLI bin (`twts gen --tokens … --out …`) for CI / non-Vite setups.
+- **`src/cli.ts`** — CLI bin (`twgen gen --tokens … --out …`) for CI / non-Vite setups.
 - **`src/runtime.ts`** — `createThemeStore` (`./runtime` entry), a Zustand store factory.
   Node-free like the core; depends on the `react`/`vite`/`zustand` peer deps (all optional).
 

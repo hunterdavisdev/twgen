@@ -1,6 +1,6 @@
 /**
  * Extract a block's body from theme-generated css output (:root, @theme, etc).
- * Assumes flat blocks (no nested braces) — true for every block twts emits.
+ * Assumes flat blocks (no nested braces) — true for every block twgen emits.
  */
 export function getBlock(css: string, selector: string): string {
 	const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")

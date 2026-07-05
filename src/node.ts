@@ -17,7 +17,7 @@ export async function loadTokens(absPath: string): Promise<ThemesConfig> {
 	// (the proxy's `has` trap) reflects only real exports, so use it to gate the default.
 	const config = ("default" in mod ? mod.default : undefined) ?? mod.themes
 	if (!config) {
-		throw new Error(`twts: ${absPath} must export a defineThemes([...]) result (default export, or named \`themes\`)`)
+		throw new Error(`twgen: ${absPath} must export a defineThemes([...]) result (default export, or named \`themes\`)`)
 	}
 	return config
 }

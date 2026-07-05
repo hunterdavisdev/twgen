@@ -12,9 +12,9 @@ function run(args: string[]) {
 	return Bun.spawnSync(["bun", cli, ...args], { stdout: "pipe", stderr: "pipe" })
 }
 
-describe("twts CLI", () => {
+describe("twgen CLI", () => {
 	it("writes the output file and exits 0 on `gen`", () => {
-		const dir = mkdtempSync(join(tmpdir(), "twts-cli-"))
+		const dir = mkdtempSync(join(tmpdir(), "twgen-cli-"))
 		const out = join(dir, "theme.gen.css")
 		try {
 			const proc = run(["gen", "--tokens", tokens, "--out", out])
@@ -31,11 +31,11 @@ describe("twts CLI", () => {
 	})
 
 	it("exits 1 when the tokens module is invalid", () => {
-		const dir = mkdtempSync(join(tmpdir(), "twts-cli-"))
+		const dir = mkdtempSync(join(tmpdir(), "twgen-cli-"))
 		try {
 			const proc = run(["gen", "--tokens", broken, "--out", join(dir, "x.css")])
 			expect(proc.exitCode).toBe(1)
-			expect(proc.stderr.toString()).toContain("[twts]")
+			expect(proc.stderr.toString()).toContain("[twgen]")
 		} finally {
 			rmSync(dir, { recursive: true, force: true })
 		}

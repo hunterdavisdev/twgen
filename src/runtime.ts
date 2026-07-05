@@ -1,10 +1,10 @@
 /**
- * twts runtime — `createThemeStore(config)` returns a typed Zustand hook that
+ * twgen runtime — `createThemeStore(config)` returns a typed Zustand hook that
  * manages the active theme: applies the theme class (palette) + `.scheme-*`
  * class (variants) to <html>, persists to localStorage, and follows the OS on
  * first load. Pass it the whole `defineThemes(...)` result.
  *
- *   import { createThemeStore } from "@hunterdavisdev/twts/runtime"
+ *   import { createThemeStore } from "twgen/runtime"
  *   export const useThemeStore = createThemeStore(themeConfig)
  */
 import { create } from "zustand"

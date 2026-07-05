@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
- * twts CLI — for CI / non-Vite setups.
- *   twts gen [--tokens src/design/tokens.ts] [--out src/design/theme.gen.css]
+ * twgen CLI — for CI / non-Vite setups.
+ *   twgen gen [--tokens src/design/tokens.ts] [--out src/design/theme.gen.css]
  */
 import { resolve } from "node:path"
 import { writeTheme } from "./node"
@@ -15,7 +15,7 @@ const flag = (name: string, fallback: string): string => {
 
 const run = async () => {
 	if (args[0] !== "gen") {
-		console.error("Usage: twts gen [--tokens <path>] [--out <path>]")
+		console.error("Usage: twgen gen [--tokens <path>] [--out <path>]")
 		process.exit(1)
 	}
 	const tokensPath = resolve(process.cwd(), flag("tokens", "src/design/tokens.ts"))
@@ -23,9 +23,9 @@ const run = async () => {
 
 	try {
 		const changed = await writeTheme(tokensPath, outPath)
-		console.log(changed ? `✓ twts: wrote ${outPath}` : "✓ twts: already up to date")
+		console.log(changed ? `✓ twgen: wrote ${outPath}` : "✓ twgen: already up to date")
 	} catch (err) {
-		console.error(`[twts] ${(err as Error).message}`)
+		console.error(`[twgen] ${(err as Error).message}`)
 		process.exit(1)
 	}
 }
