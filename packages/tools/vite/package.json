@@ -40,7 +40,7 @@
 	"scripts": {
 		"build": "tsup",
 		"dev": "tsup --watch",
-		"prepublishOnly": "tsup"
+		"prepublishOnly": "bunx tsup"
 	},
 	"dependencies": {
 		"@twgen/core": "workspace:*"
