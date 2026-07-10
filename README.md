@@ -293,6 +293,11 @@ These variants key off a `scheme-light` / `scheme-dark` class on `<html>`. The
 runtime controller (and the React hook that wraps it) adds it for you; if you use
 the codegen without the runtime, set that class yourself.
 
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for local setup, the
+dev loop, and the architecture boundaries to respect.
+
 ## License
 
 MIT © Hunter Davis

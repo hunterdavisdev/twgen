@@ -10,7 +10,8 @@
 		"dev": "bun run --filter @twgen/core dev",
 		"typecheck": "tsc --noEmit",
 		"test": "bun test",
-		"check": "biome check --write ."
+		"check": "biome check --write .",
+		"release": "bun scripts/release.ts"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.11",

@@ -1,0 +1,82 @@
+#!/usr/bin/env bun
+/**
+ * Lockstep release: bump every @twgen/* package to one version, verify, publish, tag.
+ *
+ *   bun run release <patch|minor|major|x.y.z> [--dry-run]
+ *
+ * All four packages always move together (see the lockstep decision). `workspace:*`
+ * inter-deps are rewritten to the exact version by `bun publish`, and each package's
+ * `prepublishOnly` rebuilds its (gitignored) dist — so a matched, tested set ships.
+ */
+import { readFileSync, writeFileSync } from "node:fs"
+import { $ } from "bun"
+
+// Publish order: core first (the others depend on it), then the rest.
+const PACKAGES = ["core", "react", "vite", "cli"]
+const root = new URL("..", import.meta.url).pathname
+const manifest = (pkg: string) => `${root}packages/${pkg}/package.json`
+
+const arg = process.argv[2]
+const dryRun = process.argv.includes("--dry-run")
+
+if (!arg) {
+	console.error("Usage: bun run release <patch|minor|major|x.y.z> [--dry-run]")
+	process.exit(1)
+}
+
+function nextVersion(current: string, bump: string): string {
+	if (/^\d+\.\d+\.\d+$/.test(bump)) return bump
+	const [major, minor, patch] = current.split(".").map(Number)
+	if (bump === "major") return `${major + 1}.0.0`
+	if (bump === "minor") return `${major}.${minor + 1}.0`
+	if (bump === "patch") return `${major}.${minor}.${patch + 1}`
+	console.error(`Invalid version/bump: "${bump}" (expected patch|minor|major|x.y.z)`)
+	return process.exit(1)
+}
+
+const current = JSON.parse(readFileSync(manifest("core"), "utf8")).version as string
+const version = nextVersion(current, arg)
+console.log(`\n▶ Releasing @twgen/* ${current} → ${version}${dryRun ? "  (dry run)" : ""}\n`)
+
+// Refuse to release on top of uncommitted changes, so the release commit is only the bump.
+const status = (await $`git status --porcelain`.text()).trim()
+if (status && !dryRun) {
+	console.error("✗ Working tree is dirty — commit or stash first, then release.")
+	process.exit(1)
+}
+
+// Verify BEFORE touching anything, so a failure leaves the repo untouched.
+console.log("• Verifying (typecheck + test + build)…")
+await $`bun run typecheck`
+await $`bun test`
+await $`bun run build`
+
+if (dryRun) {
+	console.log("\n• Dry run — publishing with --dry-run, no version bump, no tag:\n")
+	for (const pkg of PACKAGES) await $`bun publish --dry-run`.cwd(`${root}packages/${pkg}`)
+	console.log(`\n✓ Dry run complete. Would release ${version}.`)
+	process.exit(0)
+}
+
+// Bump every package to the same version.
+for (const pkg of PACKAGES) {
+	const path = manifest(pkg)
+	const json = JSON.parse(readFileSync(path, "utf8"))
+	json.version = version
+	writeFileSync(path, `${JSON.stringify(json, null, "\t")}\n`)
+	console.log(`• Bumped @twgen/${pkg} → ${version}`)
+}
+
+// Publish, core first. prepublishOnly rebuilds dist per package.
+console.log("")
+for (const pkg of PACKAGES) {
+	console.log(`• Publishing @twgen/${pkg}…`)
+	await $`bun publish`.cwd(`${root}packages/${pkg}`)
+}
+
+// Commit the bump and tag the release.
+await $`git add -A`
+await $`git commit -m ${`release: v${version}`}`
+await $`git tag ${`v${version}`}`
+
+console.log(`\n✓ Released v${version}. Push it with:\n    git push --follow-tags\n`)
