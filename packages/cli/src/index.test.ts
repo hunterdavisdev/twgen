@@ -3,9 +3,11 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 
-const cli = join(import.meta.dir, "..", "cli.ts")
-const tokens = join(import.meta.dir, "fixtures", "modules", "default-export.ts")
-const broken = join(import.meta.dir, "fixtures", "modules", "neither-export.ts")
+const cli = join(import.meta.dir, "index.ts")
+// Fixtures live in @twgen/core's test tree; reference them across the workspace.
+const fixtures = join(import.meta.dir, "..", "..", "core", "src", "test", "fixtures", "modules")
+const tokens = join(fixtures, "default-export.ts")
+const broken = join(fixtures, "neither-export.ts")
 
 function run(args: string[]) {
 	// Run the CLI source directly under bun — no build step needed.

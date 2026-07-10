@@ -4,27 +4,32 @@ Type-safe design tokens → Tailwind v4 theme codegen + runtime theming.
 
 Define your design tokens once in TypeScript. `twgen` generates the Tailwind v4
 `@theme` block, the per-theme palette (`:root` / `:root.dark` / …), scheme
-variants (`is-light:` / `is-dark:`), and a safelist — and gives you a typed
-theme-switching store. Your token names/values flow from one source, so the CSS
-and your types can't drift.
+variants (`is-light:` / `is-dark:`), and a safelist — plus typed,
+framework-agnostic runtime theme switching. Your token names/values flow from one
+source, so the CSS and your types can't drift.
 
 **Requires Tailwind CSS v4** — it generates v4 `@theme` / `@custom-variant` /
-`@source` syntax. The codegen core is framework-agnostic and has no runtime
-dependencies; the theme-switcher (`twgen/runtime`) is optional and
-pulls in React + Zustand only if you use it. Ships three entry points —
-`twgen` (define + codegen), `twgen/vite` (plugin),
-`twgen/runtime` (store) — plus a `twgen` CLI.
+`@source` syntax. twgen ships as a small suite of scoped packages under
+`@twgen/*`, so you install only what you need:
+
+| Package | What it's for |
+| --- | --- |
+| **`@twgen/core`** | Define tokens, generate CSS, **and** switch themes at runtime (`createThemeController` — a framework-agnostic, dependency-free DOM theme-switcher). The base every other package builds on. |
+| **`@twgen/vite`** | Vite plugin — regenerates the CSS on build + HMR. Peer: `vite`. |
+| **`@twgen/cli`** | The `twgen` command — generate CSS in CI / non-Vite setups. |
+| **`@twgen/react`** | Optional typed React theme-switcher hook (a thin `useSyncExternalStore` wrapper over the core controller). Peer: `react`. |
 
 ## Install
 
-```sh
-npm  install twgen
-pnpm add     twgen
-yarn add     twgen
-bun  add     twgen
-```
+Always install `@twgen/core`; add the others as needed. (Examples use npm — swap
+in `pnpm add` / `yarn add` / `bun add`.)
 
-Peer deps (as needed): `vite` (plugin), `zustand` + `react` (runtime).
+```sh
+npm install @twgen/core                    # authoring API + codegen (required)
+npm install -D @twgen/vite                 # Vite plugin
+npm install -D @twgen/cli                  # CLI (or run via npx @twgen/cli)
+npm install @twgen/react                   # React theme-switcher hook (vanilla? use @twgen/core)
+```
 
 ## 1. Define tokens
 
@@ -39,7 +44,7 @@ for the ones you actually vary.
 
 ```ts
 // src/design/base.tokens.ts — shared fragment
-import { defineTokens } from "twgen"
+import { defineTokens } from "@twgen/core"
 
 export const base = defineTokens({
 	text: { md: { rem: "0.875rem", line: "1.375rem" } }, // + optional tracking / weight per size
@@ -50,7 +55,7 @@ export const base = defineTokens({
 
 ```ts
 // src/design/tokens.ts — the entry the plugin/CLI points at
-import { defineThemes } from "twgen"
+import { defineThemes } from "@twgen/core"
 import { base } from "./base.tokens"
 
 export const themeConfig = defineThemes([
@@ -142,7 +147,7 @@ Tailwind default like `rounded-3xl` or `font-thin` would let people design off-s
 
 ```ts
 // vite.config.ts
-import { twgen } from "twgen/vite"
+import { twgen } from "@twgen/vite"
 import tailwindcss from "@tailwindcss/vite"
 
 export default defineConfig({
@@ -160,51 +165,77 @@ export default defineConfig({
 src/design/theme.gen.css
 ```
 
-**CLI (CI / non-Vite):**
+**CLI (CI / non-Vite)** — the `twgen` bin comes from `@twgen/cli`:
 
 ```sh
-twgen gen --tokens src/design/tokens.ts --out src/design/theme.gen.css
+npx @twgen/cli gen --tokens src/design/tokens.ts --out src/design/theme.gen.css
+# or, if installed: twgen gen --tokens … --out …
 ```
 
 ## 3. Runtime theme switching
 
+The engine lives in `@twgen/core` as `createThemeController` — framework-agnostic
+and dependency-free. `@twgen/react` wraps it in a hook; use the controller
+directly for vanilla JS, or as the base for any other framework binding.
+
+### React
+
 ```ts
 // src/stores/themeStore.ts
-import { createThemeStore } from "twgen/runtime"
+import { createThemeStore } from "@twgen/react"
 import { themeConfig } from "@/design/tokens"
 
-export const useThemeStore = createThemeStore(themeConfig) // pass the whole config
+export const useTheme = createThemeStore(themeConfig) // pass the whole config
 ```
 
-The store exposes `currentTheme`, `scheme` (the active theme's light/dark),
+The hook returns `currentTheme`, `scheme` (the active theme's light/dark),
 `availableThemes`, and `setTheme` — you build the control (a light/dark toggle,
 a dropdown, whatever):
 
 ```tsx
-const current = useThemeStore((s) => s.currentTheme)
-const themes = useThemeStore((s) => s.availableThemes)
-const setTheme = useThemeStore((s) => s.setTheme)
-const isDark = useThemeStore((s) => s.scheme === "dark")
+const { currentTheme, availableThemes, setTheme, scheme } = useTheme()
+const isDark = scheme === "dark"
 
 // dropdown
-<select value={current} onChange={(e) => setTheme(e.target.value)}>
-	{themes.map((t) => <option key={t}>{t}</option>)}
+<select value={currentTheme} onChange={(e) => setTheme(e.target.value)}>
+	{availableThemes.map((t) => <option key={t}>{t}</option>)}
 </select>
 ```
 
-The store reads the saved choice (`localStorage`, key `"theme"`) — falling back
-to the OS `prefers-color-scheme` — and applies the theme + `scheme-*` classes to
-`<html>` the moment the module loads, so a client-rendered app paints the right
-theme before React mounts. **Server-rendering?** The server markup has no class
-yet, so add a tiny inline `<head>` script that sets it from the same
-`localStorage`/OS logic to avoid a flash of the wrong theme during hydration.
+### Vanilla
+
+Same engine, no framework. `createThemeController` returns
+`getSnapshot()` / `setTheme()` / `subscribe()` plus `availableThemes`:
+
+```ts
+import { createThemeController } from "@twgen/core"
+import { themeConfig } from "@/design/tokens"
+
+const theme = createThemeController(themeConfig)
+
+const btn = document.querySelector("#toggle")
+btn.addEventListener("click", () =>
+	theme.setTheme(theme.getTheme() === "dark" ? "light" : "dark"),
+)
+theme.subscribe(() => {
+	btn.textContent = theme.getSnapshot().scheme === "dark" ? "🌙" : "☀️"
+})
+```
+
+Either way, the controller reads the saved choice (`localStorage`, key `"theme"`)
+— falling back to the OS `prefers-color-scheme` — and applies the theme +
+`scheme-*` classes to `<html>` the moment it's constructed, so a client-rendered
+app paints the right theme before your framework mounts. **Server-rendering?**
+The server markup has no class yet, so add a tiny inline `<head>` script that
+sets it from the same `localStorage`/OS logic to avoid a flash of the wrong theme
+during hydration.
 
 ## `cn` helper
 
 A tiny conditional class joiner is exported for convenience:
 
 ```ts
-import { cn } from "twgen"
+import { cn } from "@twgen/core"
 
 <div className={cn("rounded-md border border-border", selected && "border-accent bg-accent/10")} />
 ```
@@ -259,8 +290,8 @@ only where you put it changes:
 ```
 
 These variants key off a `scheme-light` / `scheme-dark` class on `<html>`. The
-runtime store adds it for you; if you use the codegen without the runtime, set
-that class yourself.
+runtime controller (and the React hook that wraps it) adds it for you; if you use
+the codegen without the runtime, set that class yourself.
 
 ## License
 

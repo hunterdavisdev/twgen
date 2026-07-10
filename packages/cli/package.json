@@ -1,0 +1,45 @@
+{
+	"name": "@twgen/cli",
+	"version": "0.1.0",
+	"description": "twgen CLI — generate the Tailwind v4 theme CSS from your tokens (CI / non-Vite setups)",
+	"license": "MIT",
+	"author": "Hunter Davis",
+	"type": "module",
+	"engines": {
+		"node": ">=18"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/hunterdavisdev/twgen.git",
+		"directory": "packages/cli"
+	},
+	"homepage": "https://github.com/hunterdavisdev/twgen#readme",
+	"bugs": "https://github.com/hunterdavisdev/twgen/issues",
+	"keywords": [
+		"tailwind",
+		"tailwindcss",
+		"tailwind-v4",
+		"cli",
+		"design-tokens",
+		"theme",
+		"codegen",
+		"twgen"
+	],
+	"files": [
+		"dist"
+	],
+	"bin": {
+		"twgen": "./dist/index.js"
+	},
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"prepublishOnly": "tsup"
+	},
+	"dependencies": {
+		"@twgen/core": "workspace:*"
+	}
+}

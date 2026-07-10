@@ -2,12 +2,12 @@
  * twgen Vite plugin — regenerates the theme CSS from your tokens on build and
  * (in dev) whenever the tokens file changes, triggering HMR.
  *
- *   import { twgen } from "twgen/vite"
+ *   import { twgen } from "@twgen/vite"
  *   plugins: [twgen(), tailwindcss()]   // place before @tailwindcss/vite
  */
 import { resolve } from "node:path"
+import { writeTheme } from "@twgen/core/node"
 import type { Plugin } from "vite"
-import { writeTheme } from "./node"
 
 export interface TwgenOptions {
 	/** Path to the tokens module. Default: "src/design/tokens.ts". */

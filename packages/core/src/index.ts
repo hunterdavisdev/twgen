@@ -151,6 +151,101 @@ export function defineThemes<const T extends readonly ThemeSpec[]>(
 	return { themes: themes as ThemeMetaMap<T>, list, reset: options?.reset }
 }
 
+// ── Runtime theming ───────────────────────────────────────────────────────────
+
+/** A stable, immutable view of the active theme — the value framework adapters render from. */
+export interface ThemeSnapshot<Theme extends string> {
+	/** The active theme. */
+	currentTheme: Theme
+	/** The active theme's color-scheme — handy for sun/moon toggles. */
+	scheme: Scheme
+	/** All theme names, in declaration order (build a toggle or dropdown from these). */
+	availableThemes: readonly Theme[]
+}
+
+/**
+ * Framework-agnostic theme engine. Owns the DOM: applies the theme class (palette)
+ * + `.scheme-*` class (variants) to `<html>`, persists to `localStorage`, and follows
+ * the OS on first load. `subscribe`/`getSnapshot` are shaped for `useSyncExternalStore`
+ * so `@twgen/react` (and any future adapter) is a thin wrapper; vanilla consumers use
+ * `getSnapshot`/`setTheme`/`subscribe` directly.
+ */
+export interface ThemeController<Theme extends string> {
+	/** Current immutable snapshot; reference-stable until `setTheme` changes it. */
+	getSnapshot(): ThemeSnapshot<Theme>
+	/** The active theme name (shorthand for `getSnapshot().currentTheme`). */
+	getTheme(): Theme
+	/** Switch theme: swaps the `<html>` classes, persists, and notifies subscribers. No-op if unchanged. */
+	setTheme(theme: Theme): void
+	/** Register a change listener; returns an unsubscribe fn. */
+	subscribe(listener: () => void): () => void
+	/** All theme names, in declaration order. */
+	availableThemes: readonly Theme[]
+}
+
+/**
+ * Build a {@link ThemeController} from a `defineThemes(...)` result (anything exposing a
+ * `themes` meta map). Applies the initial theme to `<html>` as a side effect on
+ * construction (SSR-safe — every DOM touch is guarded), reading `localStorage` then the
+ * OS `prefers-color-scheme`.
+ */
+export function createThemeController<T extends { themes: Record<string, ThemeMeta> }>(
+	config: T
+): ThemeController<keyof T["themes"] & string> {
+	type Theme = keyof T["themes"] & string
+	const meta = config.themes
+	const names = Object.keys(meta) as Theme[]
+
+	const themeClass = (theme: Theme): string | null => meta[theme].selector.match(/\.([\w-]+)/)?.[1] ?? null
+	const allThemeClasses = names.map(themeClass).filter((c): c is string => c !== null)
+	const allSchemeClasses = [...new Set(names.map((t) => `scheme-${meta[t].scheme}`))]
+
+	function applyTheme(theme: Theme) {
+		if (typeof document === "undefined") return
+		const root = document.documentElement
+		root.classList.remove(...allThemeClasses, ...allSchemeClasses)
+		const cls = themeClass(theme)
+		if (cls) root.classList.add(cls)
+		root.classList.add(`scheme-${meta[theme].scheme}`)
+	}
+
+	function getInitial(): Theme {
+		if (typeof localStorage !== "undefined") {
+			const saved = localStorage.getItem("theme")
+			if (saved && names.includes(saved as Theme)) return saved as Theme
+		}
+		const prefersDark = typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
+		const dark = names.find((n) => meta[n].scheme === "dark")
+		return prefersDark && dark ? dark : names[0]
+	}
+
+	const listeners = new Set<() => void>()
+	let current = getInitial()
+	applyTheme(current)
+
+	// Cache the snapshot so its reference is stable until `setTheme` changes it —
+	// `useSyncExternalStore` requires `getSnapshot` not to return a fresh object each call.
+	let snapshot: ThemeSnapshot<Theme> = { currentTheme: current, scheme: meta[current].scheme, availableThemes: names }
+
+	return {
+		availableThemes: names,
+		getTheme: () => current,
+		getSnapshot: () => snapshot,
+		setTheme(theme: Theme) {
+			if (theme === current) return
+			current = theme
+			applyTheme(theme)
+			if (typeof localStorage !== "undefined") localStorage.setItem("theme", theme)
+			snapshot = { currentTheme: theme, scheme: meta[theme].scheme, availableThemes: names }
+			for (const l of listeners) l()
+		},
+		subscribe(listener: () => void) {
+			listeners.add(listener)
+			return () => void listeners.delete(listener)
+		},
+	}
+}
+
 // ── Generation ──────────────────────────────────────────────────────────────
 
 interface SubProp {
@@ -257,7 +352,9 @@ export function generateTheme(config: ThemesConfig): string {
 		for (const t of themes) {
 			for (const k of Object.keys(familyTokens(t, def))) {
 				if (!known.has(k)) {
-					throw new Error(`twgen: ${def.ns} token "${k}" is set in theme "${t.name}" but missing from the default theme`)
+					throw new Error(
+						`twgen: ${def.ns} token "${k}" is set in theme "${t.name}" but missing from the default theme`
+					)
 				}
 			}
 		}

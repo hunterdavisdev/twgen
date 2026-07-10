@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test"
-import { twgen } from "../vite"
+import { twgen } from "./index"
 
 describe("twgen vite plugin", () => {
 	it("returns a pre-enforced plugin with the expected hooks", () => {

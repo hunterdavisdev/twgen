@@ -12,7 +12,11 @@
 		"noEmit": true,
 		"noUnusedLocals": true,
 		"noUnusedParameters": true,
-		"noFallthroughCasesInSwitch": true
+		"noFallthroughCasesInSwitch": true,
+		"paths": {
+			"@twgen/core": ["./packages/core/src/index.ts"],
+			"@twgen/core/node": ["./packages/core/src/node.ts"]
+		}
 	},
-	"include": ["src", "tsup.config.ts"]
+	"include": ["packages/*/src"]
 }

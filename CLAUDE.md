@@ -4,42 +4,48 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-`twgen` is a library that turns TypeScript-defined design tokens into a Tailwind v4
-`@theme` stylesheet plus a typed runtime theme-switcher. One token source drives
-both the generated CSS and the TypeScript types, so they can't drift. Distributed
-as a package with three importable entries (`.`, `./vite`, `./runtime`) and a CLI bin (`twgen`).
+`twgen` turns TypeScript-defined design tokens into a Tailwind v4 `@theme` stylesheet
+plus a typed runtime theme-switcher. One token source drives both the generated CSS and
+the TypeScript types, so they can't drift. It's a **bun-workspace monorepo** publishing a
+suite of scoped packages under `@twgen/*`.
 
-## Commands
+## Commands (run from the repo root)
 
-Package manager is **bun** (see `bun.lock`).
+Package manager is **bun** (see `bun.lock`); packages live in `packages/*`.
 
-- `bun run build` — bundle to `dist/` via tsup (emits `.js` + `.d.ts` for each entry)
-- `bun run dev` — tsup in watch mode
-- `bun run typecheck` — `tsc --noEmit`
+- `bun run build` — builds every package via tsup, `@twgen/core` first (others depend on it)
+- `bun run typecheck` — `tsc --noEmit` over all packages (one root tsconfig; `@twgen/*`
+  resolves to package `src` via `paths`, so tests/typecheck run against source, no build needed)
+- `bun test` — the bun:test suite (tests live in each package's `src/`)
 - `bun run check` — `biome check --write .` (format + lint + autofix; the only lint/format step)
-
-There is **no test framework or test suite** in this repo — don't assume `bun test` exists.
 
 ## Architecture
 
-The package has a strict **browser-safe core / node boundary** split. Respect it when adding code:
+Four packages, with a strict **browser-safe core / node boundary** split. Respect it when adding code:
 
-- **`src/index.ts`** — the pure, node-free core (`.` entry). Contains all types, the
-  authoring API (`defineTokens`, `createTheme`, `defineThemes`), the `cn` helper, and
-  `generateTheme` (the codegen). User token files import from here, so it **must never
-  import `node:*` or any node-only module.**
-- **`src/node.ts`** — the *only* place file IO and TS-module loading live (`readFileSync`/
-  `writeFileSync`, `jiti` to import `.ts` token files). Internal; imported only by `vite.ts`
-  and `cli.ts`, never by the core or runtime. `loadTokens` uses a fresh `jiti` instance per
-  call (`moduleCache: false`) so watch-driven regen picks up edits.
-- **`src/vite.ts`** — Vite plugin (`./vite` entry). `enforce: "pre"`; regenerates on
-  `buildStart` and on watched-file change. Must run before `@tailwindcss/vite`.
-- **`src/cli.ts`** — CLI bin (`twgen gen --tokens … --out …`) for CI / non-Vite setups.
-- **`src/runtime.ts`** — `createThemeStore` (`./runtime` entry), a Zustand store factory.
-  Node-free like the core; depends on the `react`/`vite`/`zustand` peer deps (all optional).
+- **`@twgen/core`** (`packages/core/`) — two entries:
+  - `src/index.ts` (`.`) — the pure, node-free core: all types, the authoring API
+    (`defineTokens`, `defineTheme`, `defineThemes`), the `cn` helper, `generateTheme`
+    (the codegen), and `createThemeController` (the framework-agnostic runtime
+    theme-switcher — pure DOM + `localStorage`, no node). User token files import this, so
+    it **must never import `node:*`.** DOM globals are fine (guarded with `typeof` checks).
+  - `src/node.ts` (`@twgen/core/node`) — the *only* place file IO + TS-module loading live
+    (`readFileSync`/`writeFileSync`, `jiti`). Node-only subpath; imported by `@twgen/vite`
+    and `@twgen/cli`, never by the core index or `@twgen/react`. `loadTokens` uses a fresh
+    `jiti` per call (`moduleCache: false`) so watch-driven regen picks up edits.
+- **`@twgen/vite`** (`packages/vite/src/index.ts`) — Vite plugin. `enforce: "pre"`;
+  regenerates on `buildStart` and on watched-file change. Must run before `@tailwindcss/vite`.
+  Depends on `@twgen/core`; peer `vite`.
+- **`@twgen/cli`** (`packages/cli/src/index.ts`) — the `twgen` bin (`twgen gen --tokens … --out …`)
+  for CI / non-Vite setups. Depends on `@twgen/core`.
+- **`@twgen/react`** (`packages/react/src/index.ts`) — `createThemeStore`, a thin
+  `useSyncExternalStore` binding over the core's `createThemeController` (no store lib of its
+  own). Node-free like the core; depends on `@twgen/core`; peer `react` only. Vanilla
+  consumers skip this package and use `createThemeController` from `@twgen/core` directly.
 
-`node.ts` is deliberately **not** a package export — it's the internal seam that keeps node
-code out of anything a browser might import.
+The browser-safe boundary is now the `@twgen/core/node` **subpath**: the core index stays
+pure, and only build-time consumers reach for `/node`. Each package externalizes `@twgen/*`
+(and peers) at build, so nothing gets bundled into another.
 
 ### The codegen model (the central idea)
 
@@ -60,7 +66,7 @@ with thrown errors in `generateTheme`):
 
 ### Adding a Tailwind namespace
 
-The `NAMESPACES` registry in `src/index.ts` is the single source of truth for which Tailwind
+The `NAMESPACES` registry in `packages/core/src/index.ts` is the single source of truth for which Tailwind
 v4 namespaces are supported (it mirrors Tailwind v4's 20 documented namespaces 1:1). Add an
 entry there with a `safelist` (a utility prefix to emit `@source inline(...)` for
 dynamically-built classes, or `null`) and a `subProps` mapper. `text` is the one compound
@@ -72,7 +78,12 @@ additive (no resets).
 
 ### Runtime theming
 
-`createThemeStore` applies **two** classes to `<html>`: the theme class parsed from the
-theme's selector (e.g. `.dark`) drives the palette, and a `scheme-<light|dark>` class drives
-the `is-light:` / `is-dark:` custom variants. It persists the choice to `localStorage`
-(`"theme"` key) and follows the OS `prefers-color-scheme` on first load.
+`createThemeController` (in `@twgen/core`) is the engine: it applies **two** classes to
+`<html>` — the theme class parsed from the theme's selector (e.g. `.dark`) drives the
+palette, and a `scheme-<light|dark>` class drives the `is-light:` / `is-dark:` custom
+variants. It persists the choice to `localStorage` (`"theme"` key), follows the OS
+`prefers-color-scheme` on first load, and exposes `getSnapshot`/`setTheme`/`subscribe`
+(snapshot is reference-stable until a change, so it drops straight into
+`useSyncExternalStore`). Vanilla consumers use it directly; `@twgen/react`'s
+`createThemeStore` is the `useSyncExternalStore` wrapper. Its behavioral suite lives in
+`packages/core/src/test/theme-controller.test.ts`.

@@ -4,7 +4,7 @@
  *   twgen gen [--tokens src/design/tokens.ts] [--out src/design/theme.gen.css]
  */
 import { resolve } from "node:path"
-import { writeTheme } from "./node"
+import { writeTheme } from "@twgen/core/node"
 
 const args = process.argv.slice(2)
 

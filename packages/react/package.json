@@ -1,0 +1,51 @@
+{
+	"name": "@twgen/react",
+	"version": "0.1.0",
+	"description": "React runtime theme-switcher for twgen — typed hook that applies the active theme to <html>",
+	"license": "MIT",
+	"author": "Hunter Davis",
+	"type": "module",
+	"engines": {
+		"node": ">=18"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/hunterdavisdev/twgen.git",
+		"directory": "packages/react"
+	},
+	"homepage": "https://github.com/hunterdavisdev/twgen#readme",
+	"bugs": "https://github.com/hunterdavisdev/twgen/issues",
+	"keywords": [
+		"tailwind",
+		"tailwindcss",
+		"theme",
+		"theming",
+		"dark-mode",
+		"react",
+		"twgen"
+	],
+	"sideEffects": false,
+	"files": [
+		"dist"
+	],
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"prepublishOnly": "tsup"
+	},
+	"dependencies": {
+		"@twgen/core": "workspace:*"
+	},
+	"peerDependencies": {
+		"react": ">=18"
+	}
+}

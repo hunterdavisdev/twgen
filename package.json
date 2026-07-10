@@ -1,90 +1,28 @@
 {
-	"name": "twgen",
-	"version": "0.1.0",
-	"description": "Type-safe design tokens → Tailwind v4 theme codegen + runtime theming",
-	"license": "MIT",
-	"author": "Hunter Davis",
+	"name": "twgen-monorepo",
+	"private": true,
 	"type": "module",
-	"engines": {
-		"node": ">=18"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/hunterdavisdev/twgen.git"
-	},
-	"homepage": "https://github.com/hunterdavisdev/twgen#readme",
-	"bugs": "https://github.com/hunterdavisdev/twgen/issues",
-	"keywords": [
-		"tailwind",
-		"tailwindcss",
-		"tailwind-v4",
-		"design-tokens",
-		"theme",
-		"theming",
-		"dark-mode",
-		"css-variables",
-		"codegen",
-		"zustand",
-		"vite-plugin"
+	"workspaces": [
+		"packages/*"
 	],
-	"sideEffects": false,
-	"files": [
-		"dist"
-	],
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.js"
-		},
-		"./vite": {
-			"types": "./dist/vite.d.ts",
-			"import": "./dist/vite.js"
-		},
-		"./runtime": {
-			"types": "./dist/runtime.d.ts",
-			"import": "./dist/runtime.js"
-		}
-	},
-	"bin": {
-		"twgen": "dist/cli.js"
-	},
 	"scripts": {
-		"build": "tsup",
-		"dev": "tsup --watch",
+		"build": "bun run --filter @twgen/core build && bun run --filter @twgen/vite build && bun run --filter @twgen/react build && bun run --filter @twgen/cli build",
+		"dev": "bun run --filter @twgen/core dev",
 		"typecheck": "tsc --noEmit",
 		"test": "bun test",
-		"check": "biome check --write .",
-		"prepublishOnly": "bun run typecheck && bun test && bun run build"
-	},
-	"dependencies": {
-		"jiti": "^2.4.2"
-	},
-	"peerDependencies": {
-		"react": ">=18",
-		"vite": ">=5",
-		"zustand": ">=5"
-	},
-	"peerDependenciesMeta": {
-		"react": {
-			"optional": true
-		},
-		"vite": {
-			"optional": true
-		},
-		"zustand": {
-			"optional": true
-		}
+		"check": "biome check --write ."
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.4.11",
 		"@types/bun": "^1.3.14",
 		"@types/node": "^24.12.3",
 		"@types/react": "^19.2.14",
+		"@types/react-dom": "^19.2.3",
 		"happy-dom": "^20.10.6",
 		"react": "^19.2.6",
+		"react-dom": "^19.2.6",
 		"tsup": "^8.5.0",
 		"typescript": "~5.9.3",
-		"vite": "^8.0.16",
-		"zustand": "^5.0.14"
+		"vite": "^8.0.16"
 	}
 }
