@@ -11,11 +11,15 @@ suite of scoped packages under `@twgen/*`.
 
 ## Commands (run from the repo root)
 
-Package manager is **bun** (see `bun.lock`); packages live in `packages/*`.
+Package manager is **bun** (see `bun.lock`). Packages are grouped by role:
+`packages/core`, `packages/adapters/*` (framework runtime bindings — `react`), and
+`packages/tools/*` (build-time — `vite`, `cli`). Folders are organizational only; each
+still publishes as `@twgen/<name>` regardless of location.
 
 - `bun run build` — builds every package via tsup, `@twgen/core` first (others depend on it)
-- `bun run typecheck` — `tsc --noEmit` over all packages (one root tsconfig; `@twgen/*`
-  resolves to package `src` via `paths`, so tests/typecheck run against source, no build needed)
+- `bun run typecheck` — `tsc --noEmit` over all packages (one root tsconfig; `@twgen/core`
+  — the only cross-package dependency — resolves to its `src` via `paths`, so tests/typecheck
+  run against source, no build needed)
 - `bun test` — the bun:test suite (tests live in each package's `src/`)
 - `bun run check` — `biome check --write .` (format + lint + autofix; the only lint/format step)
 
@@ -33,12 +37,12 @@ Four packages, with a strict **browser-safe core / node boundary** split. Respec
     (`readFileSync`/`writeFileSync`, `jiti`). Node-only subpath; imported by `@twgen/vite`
     and `@twgen/cli`, never by the core index or `@twgen/react`. `loadTokens` uses a fresh
     `jiti` per call (`moduleCache: false`) so watch-driven regen picks up edits.
-- **`@twgen/vite`** (`packages/vite/src/index.ts`) — Vite plugin. `enforce: "pre"`;
+- **`@twgen/vite`** (`packages/tools/vite/src/index.ts`) — Vite plugin. `enforce: "pre"`;
   regenerates on `buildStart` and on watched-file change. Must run before `@tailwindcss/vite`.
   Depends on `@twgen/core`; peer `vite`.
-- **`@twgen/cli`** (`packages/cli/src/index.ts`) — the `twgen` bin (`twgen gen --tokens … --out …`)
+- **`@twgen/cli`** (`packages/tools/cli/src/index.ts`) — the `twgen` bin (`twgen gen --tokens … --out …`)
   for CI / non-Vite setups. Depends on `@twgen/core`.
-- **`@twgen/react`** (`packages/react/src/index.ts`) — `createThemeStore`, a thin
+- **`@twgen/react`** (`packages/adapters/react/src/index.ts`) — `createThemeStore`, a thin
   `useSyncExternalStore` binding over the core's `createThemeController` (no store lib of its
   own). Node-free like the core; depends on `@twgen/core`; peer `react` only. Vanilla
   consumers skip this package and use `createThemeController` from `@twgen/core` directly.

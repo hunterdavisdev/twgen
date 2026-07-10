@@ -12,9 +12,15 @@ import { readFileSync, writeFileSync } from "node:fs"
 import { $ } from "bun"
 
 // Publish order: core first (the others depend on it), then the rest.
-const PACKAGES = ["core", "react", "vite", "cli"]
+const PACKAGES = [
+	{ name: "core", dir: "core" },
+	{ name: "react", dir: "adapters/react" },
+	{ name: "vite", dir: "tools/vite" },
+	{ name: "cli", dir: "tools/cli" },
+]
 const root = new URL("..", import.meta.url).pathname
-const manifest = (pkg: string) => `${root}packages/${pkg}/package.json`
+const pkgDir = (dir: string) => `${root}packages/${dir}`
+const manifest = (dir: string) => `${pkgDir(dir)}/package.json`
 
 const arg = process.argv[2]
 const dryRun = process.argv.includes("--dry-run")
@@ -53,25 +59,25 @@ await $`bun run build`
 
 if (dryRun) {
 	console.log("\n• Dry run — publishing with --dry-run, no version bump, no tag:\n")
-	for (const pkg of PACKAGES) await $`bun publish --dry-run`.cwd(`${root}packages/${pkg}`)
+	for (const pkg of PACKAGES) await $`bun publish --dry-run`.cwd(pkgDir(pkg.dir))
 	console.log(`\n✓ Dry run complete. Would release ${version}.`)
 	process.exit(0)
 }
 
 // Bump every package to the same version.
 for (const pkg of PACKAGES) {
-	const path = manifest(pkg)
+	const path = manifest(pkg.dir)
 	const json = JSON.parse(readFileSync(path, "utf8"))
 	json.version = version
 	writeFileSync(path, `${JSON.stringify(json, null, "\t")}\n`)
-	console.log(`• Bumped @twgen/${pkg} → ${version}`)
+	console.log(`• Bumped @twgen/${pkg.name} → ${version}`)
 }
 
 // Publish, core first. prepublishOnly rebuilds dist per package.
 console.log("")
 for (const pkg of PACKAGES) {
-	console.log(`• Publishing @twgen/${pkg}…`)
-	await $`bun publish`.cwd(`${root}packages/${pkg}`)
+	console.log(`• Publishing @twgen/${pkg.name}…`)
+	await $`bun publish`.cwd(pkgDir(pkg.dir))
 }
 
 // Commit the bump and tag the release.

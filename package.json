@@ -3,7 +3,9 @@
 	"private": true,
 	"type": "module",
 	"workspaces": [
-		"packages/*"
+		"packages/core",
+		"packages/adapters/*",
+		"packages/tools/*"
 	],
 	"scripts": {
 		"build": "bun run --filter @twgen/core build && bun run --filter @twgen/vite build && bun run --filter @twgen/react build && bun run --filter @twgen/cli build",

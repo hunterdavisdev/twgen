@@ -18,5 +18,5 @@
 			"@twgen/core/node": ["./packages/core/src/node.ts"]
 		}
 	},
-	"include": ["packages/*/src"]
+	"include": ["packages/core/src", "packages/adapters/*/src", "packages/tools/*/src"]
 }

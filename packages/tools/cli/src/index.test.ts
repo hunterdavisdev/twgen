@@ -5,7 +5,8 @@ import { join } from "node:path"
 
 const cli = join(import.meta.dir, "index.ts")
 // Fixtures live in @twgen/core's test tree; reference them across the workspace.
-const fixtures = join(import.meta.dir, "..", "..", "core", "src", "test", "fixtures", "modules")
+// From packages/tools/cli/src → up to packages/ → into core.
+const fixtures = join(import.meta.dir, "..", "..", "..", "core", "src", "test", "fixtures", "modules")
 const tokens = join(fixtures, "default-export.ts")
 const broken = join(fixtures, "neither-export.ts")
 

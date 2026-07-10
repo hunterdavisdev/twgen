@@ -17,24 +17,7 @@
         "vite": "^8.0.16",
       },
     },
-    "packages/cli": {
-      "name": "@twgen/cli",
-      "version": "0.1.0",
-      "bin": {
-        "twgen": "./dist/index.js",
-      },
-      "dependencies": {
-        "@twgen/core": "workspace:*",
-      },
-    },
-    "packages/core": {
-      "name": "@twgen/core",
-      "version": "0.1.0",
-      "dependencies": {
-        "jiti": "^2.4.2",
-      },
-    },
-    "packages/react": {
+    "packages/adapters/react": {
       "name": "@twgen/react",
       "version": "0.1.0",
       "dependencies": {
@@ -44,7 +27,24 @@
         "react": ">=18",
       },
     },
-    "packages/vite": {
+    "packages/core": {
+      "name": "@twgen/core",
+      "version": "0.1.0",
+      "dependencies": {
+        "jiti": "^2.4.2",
+      },
+    },
+    "packages/tools/cli": {
+      "name": "@twgen/cli",
+      "version": "0.1.0",
+      "bin": {
+        "twgen": "./dist/index.js",
+      },
+      "dependencies": {
+        "@twgen/core": "workspace:*",
+      },
+    },
+    "packages/tools/vite": {
       "name": "@twgen/vite",
       "version": "0.1.0",
       "dependencies": {
@@ -226,13 +226,13 @@
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.62.2", "", { "os": "win32", "cpu": "x64" }, "sha512-BfzEnDJOt9T8M989/lA37EcJgat01wLRnoi5dQf3QzOH7jzpqTAzdDbVfRljVr5r+jzKqpbHeyOfAaXxAd0PAA=="],
 
-    "@twgen/cli": ["@twgen/cli@workspace:packages/cli"],
+    "@twgen/cli": ["@twgen/cli@workspace:packages/tools/cli"],
 
     "@twgen/core": ["@twgen/core@workspace:packages/core"],
 
-    "@twgen/react": ["@twgen/react@workspace:packages/react"],
+    "@twgen/react": ["@twgen/react@workspace:packages/adapters/react"],
 
-    "@twgen/vite": ["@twgen/vite@workspace:packages/vite"],
+    "@twgen/vite": ["@twgen/vite@workspace:packages/tools/vite"],
 
     "@tybys/wasm-util": ["@tybys/wasm-util@0.10.2", "", { "dependencies": { "tslib": "^2.4.0" } }, "sha512-RoBvJ2X0wuKlWFIjrwffGw1IqZHKQqzIchKaadZZfnNpsAYp2mM0h36JtPCjNDAHGgYez/15uMBpfGwchhiMgg=="],
 
