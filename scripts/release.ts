@@ -73,9 +73,15 @@ for (const pkg of PACKAGES) {
 	console.log(`• Bumped @twgen/${pkg.name} → ${version}`)
 }
 
-// Refresh the lockfile so it records the NEW version. `bun publish` rewrites `workspace:*`
-// deps using the lockfile's resolved version — skip this and it pins the previous version.
-console.log("• Updating lockfile…")
+/**
+ * The @twgen/cli, @twgen/react, and @twgen/vite packages all depend on @twgen/core with `workspace:*` version
+ * directives. `bun publish` rewrites these using the lockfile's resolved version, but a plain
+ * `bun install` (even using --force) does not refresh a workspace package's own version.
+ * Easy way out is to just delete the lockfile and run `bun install` again. Might need to find an
+ * alternative approach if the project's dependency graph becomes more complex.
+ */
+console.log("• Regenerating lockfile…")
+await $`rm -f ${root}bun.lock`
 await $`bun install`
 
 // Publish, core first. prepublishOnly rebuilds dist per package.
