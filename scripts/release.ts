@@ -73,6 +73,11 @@ for (const pkg of PACKAGES) {
 	console.log(`• Bumped @twgen/${pkg.name} → ${version}`)
 }
 
+// Refresh the lockfile so it records the NEW version. `bun publish` rewrites `workspace:*`
+// deps using the lockfile's resolved version — skip this and it pins the previous version.
+console.log("• Updating lockfile…")
+await $`bun install`
+
 // Publish, core first. prepublishOnly rebuilds dist per package.
 console.log("")
 for (const pkg of PACKAGES) {
