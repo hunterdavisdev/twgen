@@ -1,6 +1,6 @@
 {
 	"name": "@twgen/react",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "React runtime theme-switcher for twgen — typed hook that applies the active theme to <html>",
 	"license": "MIT",
 	"author": "Hunter Davis",

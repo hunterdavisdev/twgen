@@ -1,6 +1,6 @@
 {
 	"name": "@twgen/vite",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Vite plugin for twgen — regenerates the Tailwind v4 theme CSS from your tokens on build and HMR",
 	"license": "MIT",
 	"author": "Hunter Davis",
