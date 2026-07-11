@@ -19,7 +19,7 @@
     },
     "packages/adapters/react": {
       "name": "@twgen/react",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "dependencies": {
         "@twgen/core": "workspace:*",
       },
@@ -29,14 +29,14 @@
     },
     "packages/core": {
       "name": "@twgen/core",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "dependencies": {
         "jiti": "^2.4.2",
       },
     },
     "packages/tools/cli": {
       "name": "@twgen/cli",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "bin": {
         "twgen": "./dist/index.js",
       },
@@ -46,7 +46,7 @@
     },
     "packages/tools/vite": {
       "name": "@twgen/vite",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "dependencies": {
         "@twgen/core": "workspace:*",
       },
